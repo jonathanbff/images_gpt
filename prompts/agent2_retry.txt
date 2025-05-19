@@ -28,7 +28,7 @@ Seu único trabalho é receber um texto (possivelmente inválido) e *retornar* u
         "body": "<mesmo texto do style>",
         "cta": "<mesmo CTA do style>",
         "colors": "pal1",
-        "centralGraphicIdea": "<15–30 palavras – descreve a imagem desejada>"
+        "centralGraphicIdea": "<DESCRIÇÃO VISUAL DETALHADA da imagem desejada com 25-40 palavras, incluindo conteúdo específico, estilo visual, elementos principais, composição e foco. Seja concreto, não genérico.>"
       },
       "conversionRationale": "<máx 200 caracteres – por que converte melhor>",
       "riskTag": "safe"          // sempre "safe"
@@ -40,4 +40,5 @@ REGRAS CRÍTICAS
 • Nada antes ou depois do objeto JSON.  
 • Aspas duplas obrigatórias.  
 • Feche todos os arrays/objetos corretamente, sem vírgulas sobrando.  
-• Se um valor for ausente, use `null`, nunca remova a chave. 
+• Se um valor for ausente, use `null`, nunca remova a chave.
+• Para "centralGraphicIdea": utilize descrições visuais EXTREMAMENTE detalhadas e concretas, não genéricas. 

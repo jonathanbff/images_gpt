@@ -1,3 +1,6 @@
-{{idea}}. Follow design guidelines exactly, keep aspect ratio {{ratio}}.
-Use predominant primary color {{primary}}, secondary details {{secondary}}, accent {{accent}}.
-{% if transparent %}transparent background,{% endif %} minimalist, flat design, high marketing appeal. 
+{{idea}}. Criar uma imagem de marketing com proporção exata {{ratio}}.
+Usar cores: primária {{primary}} (dominante), secundária {{secondary}} (detalhes) e destaque {{accent}} (realces).
+{% if transparent %}Criar com fundo transparente,{% endif %} 
+Estilo: Visual de marketing limpo e de alta qualidade com foco profissional no produto.
+Composição deve ser equilibrada com hierarquia visual clara. 
+Gerar em estilo fotorrealista com detalhes finos e texturização. 

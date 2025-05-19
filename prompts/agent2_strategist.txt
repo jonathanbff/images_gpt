@@ -31,7 +31,7 @@ SCHEMA DE SAÍDA
         "body": "<mesmo texto do style>",
         "cta": "<mesmo CTA do style>",
         "colors": "pal1",
-        "centralGraphicIdea": "<15–30 palavras – descreve a imagem desejada>"
+        "centralGraphicIdea": "<DESCRIÇÃO VISUAL DETALHADA da imagem desejada com 25-40 palavras, incluindo conteúdo específico, estilo visual, elementos principais, composição e foco. Seja concreto, não genérico.>"
       },
       "conversionRationale": "<máx 200 caracteres – por que converte melhor>",
       "riskTag": "safe"          // sempre "safe"
@@ -45,4 +45,5 @@ REGRAS
 • Nada de vírgulas penduradas.  
 • Sem markdown ou explicações fora do JSON.  
 • Respeite limites de caracteres informados.  
-• Linguagem PT‑BR (exceto chaves da estrutura). 
+• Linguagem PT‑BR (exceto chaves da estrutura).
+• Para "centralGraphicIdea": seja EXTREMAMENTE específico e detalhado sobre o que deve aparecer na imagem, com descrições visuais CONCRETAS, não abstratas. 

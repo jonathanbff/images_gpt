@@ -30,6 +30,7 @@ MODEL_IMAGE  = "gpt-image-1"
 DEFAULT_SIZE    = "1024x1024"
 DEFAULT_QUALITY = "auto"
 DEFAULT_BG      = "opaque"
+DEFAULT_STYLE   = "photorealistic" # opções: photorealistic, flat, 3d, cartoon
 OUT_DIR         = Path("outputs")
 PROMPTS_DIR     = Path(__file__).resolve().parent / "prompts"
 
@@ -122,30 +123,42 @@ def run_agent2(spec: Dict[str, Any]) -> Dict[str, Any]:
 PROMPT_TEMPLATE = load_prompt("agent3_template.txt")
 
 def build_prompt(idea: str, palette: Dict[str, str],
-                 ratio: str, transparent: bool) -> str:
-    from string import Template
-    tpl = Template(PROMPT_TEMPLATE)
-    return tpl.safe_substitute(
-        idea=idea,
-        primary=palette["primary"],
-        secondary=palette["secondary"],
-        accent=palette["accent"],
-        ratio=ratio,
-        transparent="yes" if transparent else ""
-    )
+                 ratio: str, transparent: bool, style: str = DEFAULT_STYLE) -> str:
+    prompt = PROMPT_TEMPLATE
+    prompt = prompt.replace("{{idea}}", idea)
+    prompt = prompt.replace("{{ratio}}", ratio)
+    prompt = prompt.replace("{{primary}}", palette["primary"])
+    prompt = prompt.replace("{{secondary}}", palette["secondary"])
+    prompt = prompt.replace("{{accent}}", palette["accent"])
+    
+    if style != "photorealistic":
+        prompt = prompt.replace("photorealistic", style)
+    
+    if transparent:
+        prompt = prompt.replace("{% if transparent %}", "")
+        prompt = prompt.replace("{% endif %}", "")
+    else:
+        start = prompt.find("{% if transparent %}")
+        end = prompt.find("{% endif %}") + len("{% endif %}")
+        if start != -1 and end != -1:
+            prompt = prompt[:start] + prompt[end:]
+    
+    return prompt
 
 def fetch_palette(pid: str, pack: Dict[str, Any]) -> Dict[str, str]:
     return next(p for p in pack["colorPalettes"] if p["paletteId"] == pid)
 
 def generate_images(variants: List[Dict[str, Any]], pack: Dict[str, Any],
-                    size: str, quality: str, bg: str,
-                    seed: int | None) -> List[Dict[str, Any]]:
+                    size: str, quality: str, bg: str, 
+                    style: str = DEFAULT_STYLE,
+                    seed: int | None = None) -> List[Dict[str, Any]]:
     w, h = parse_size(size)
     assets = []
     for v in variants:
         palette = fetch_palette(v["placeholders"]["colors"], pack)
         prompt = build_prompt(
-            v["placeholders"]["centralGraphicIdea"], palette, size, bg == "transparent"
+            v["placeholders"]["centralGraphicIdea"], palette, size, 
+            bg == "transparent", style
         )
         log(f" → GPT generate {v['id']}")
         res = client.images.generate(
@@ -165,10 +178,19 @@ def generate_images(variants: List[Dict[str, Any]], pack: Dict[str, Any],
     return assets
 
 def edit_image(edit_path: Path, mask_path: Path | None, prompt: str,
-               size: str, quality: str, bg: str,
-               seed: int | None) -> List[Dict[str, Any]]:
+               size: str, quality: str, bg: str, 
+               style: str = DEFAULT_STYLE,
+               seed: int | None = None) -> List[Dict[str, Any]]:
     w, h = parse_size(size)
     log(" → GPT edit")
+    
+    # Aplica o estilo ao prompt
+    if style != "photorealistic":
+        if "photorealistic" in prompt:
+            prompt = prompt.replace("photorealistic", style)
+        else:
+            prompt = f"{prompt}. Generate in {style} style."
+    
     res = client.images.edit(
         model=MODEL_IMAGE,
         image=open(edit_path, "rb"),
@@ -199,6 +221,9 @@ def main() -> None:
                    choices=["low", "medium", "high", "auto"])
     p.add_argument("--background", default=DEFAULT_BG,
                    choices=["opaque", "transparent"])
+    p.add_argument("--style", default=DEFAULT_STYLE,
+                   choices=["photorealistic", "flat", "3d", "cartoon"],
+                   help="Estilo visual das imagens geradas")
     p.add_argument("--seed", type=int, help="Seed para reprodutibilidade")
 
     # edição / inpainting
@@ -225,7 +250,7 @@ def main() -> None:
 
         assets = edit_image(
             edit_path, mask_path, args.prompt,
-            args.size, args.quality, args.background, args.seed)
+            args.size, args.quality, args.background, args.style, args.seed)
 
     # MODO GERAÇÃO
     else:
@@ -239,7 +264,7 @@ def main() -> None:
         pack   = run_agent2(spec)
         assets = generate_images(
             pack["creativeVariants"][:args.variants],
-            pack, args.size, args.quality, args.background, args.seed)
+            pack, args.size, args.quality, args.background, args.style, args.seed)
 
     # Manifesto
     (OUT_DIR / "assets_manifest.json").write_text(
