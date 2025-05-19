@@ -82,7 +82,24 @@ def run_agent1(img_path: Path) -> Dict[str, Any]:
         }],
         temperature=0
     )
-    return json.loads(res.choices[0].message.content)
+    content = res.choices[0].message.content
+    
+    # Tenta extrair o JSON mesmo que o modelo responda com texto adicional
+    json_start = content.find('{')
+    json_end = content.rfind('}') + 1
+    
+    if json_start >= 0 and json_end > json_start:
+        json_content = content[json_start:json_end]
+        try:
+            return json.loads(json_content)
+        except json.JSONDecodeError:
+            # Se falhar, tenta limpar o texto e converter novamente
+            clean_content = clean_json_string(json_content)
+            return json.loads(clean_content)
+    
+    # Se não encontrar JSON válido, usa o conteúdo original como string
+    log("⚠️ Não foi possível extrair JSON válido da resposta")
+    return {"raw_response": content}
 
 # ─────────────────────────── AGENTE 2 ─────────────────────────────
 AGENT2_PROMPT       = load_prompt("agent2_strategist.txt")
@@ -100,12 +117,60 @@ def clean_json_string(s: str) -> str:
 
 def run_agent2(spec: Dict[str, Any]) -> Dict[str, Any]:
     log("Agente 2 ▶️  gerando variações textuais")
+    
+    # Verifica se estamos trabalhando com a saída crua do Agente 1
+    if "raw_response" in spec:
+        log("⚠️  Utilizando resposta textual do Agente 1 em vez de JSON")
+        spec_content = spec["raw_response"]
+    else:
+        # Converte o novo formato para um formato compatível se necessário
+        if "canvas_size" in spec and "placeholders" in spec:
+            log("ℹ️  Convertendo formato novo para compatibilidade")
+            # Mapeamento básico do novo formato para o formato esperado pelo Agente 2
+            canvas = {
+                "width": spec["canvas_size"]["w"],
+                "height": spec["canvas_size"]["h"],
+                "backgroundColor": spec["color_palette"][0] if spec["color_palette"] else "#FFFFFF"
+            }
+            
+            elements = []
+            for p in spec["placeholders"]:
+                # Converte o placeholder para o formato esperado pelo Agente 2
+                element = {
+                    "id": p["id"],
+                    "type": map_type(p["type"]),
+                    "text": p["value"] if p["type"] == "text" else None,
+                    "bbox": {
+                        "x": p["bbox"][0] if isinstance(p["bbox"], list) else 0,
+                        "y": p["bbox"][1] if isinstance(p["bbox"], list) else 0,
+                        "w": p["bbox"][2] if isinstance(p["bbox"], list) else 0,
+                        "h": p["bbox"][3] if isinstance(p["bbox"], list) else 0
+                    },
+                    "style": {
+                        "fillColor": p["value"] if p["type"] == "shape" else "none",
+                        "fontColor": (p.get("font", {}).get("color") if p["type"] == "text" 
+                                     else "none"),
+                        "fontSize": p.get("font", {}).get("size") if p["type"] == "text" else None,
+                        "fontWeight": p.get("font", {}).get("weight") if p["type"] == "text" 
+                                      else None,
+                        "radius": None,
+                        "alignment": None
+                    },
+                    "layer": 0,
+                    "relation": None
+                }
+                elements.append(element)
+            
+            spec_content = json.dumps({"canvas": canvas, "elements": elements})
+        else:
+            spec_content = json.dumps(spec)
+    
     prompt, temp = AGENT2_PROMPT, 0.7
     for _ in range(3):
         res = client.chat.completions.create(
             model=MODEL_TEXT,
             messages=[{"role": "system", "content": prompt},
-                      {"role": "user", "content": json.dumps(spec)}],
+                      {"role": "user", "content": spec_content}],
             temperature=temp
         )
         content = res.choices[0].message.content
@@ -118,6 +183,18 @@ def run_agent2(spec: Dict[str, Any]) -> Dict[str, Any]:
                 log("⚠️  JSON inválido, trocando para prompt de retry")
                 prompt, temp = AGENT2_RETRY_PROMPT, 0.2
     raise RuntimeError("Agente 2: não foi possível gerar JSON válido")
+
+def map_type(type_str: str) -> str:
+    """Mapeia os tipos do novo formato para o formato antigo"""
+    mapping = {
+        "text": "headline-text",  # valor padrão para textos
+        "shape": "background-shape",
+        "image": "illustration",
+        "icon": "icon",
+        "logo": "logo",
+        "legal": "disclaimer-text"
+    }
+    return mapping.get(type_str, "background-shape")
 
 # ─────────────────────────── AGENTE 3 ─────────────────────────────
 PROMPT_TEMPLATE = load_prompt("agent3_template.txt")
