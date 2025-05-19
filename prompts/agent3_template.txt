@@ -1,0 +1,3 @@
+{{idea}}. Follow design guidelines exactly, keep aspect ratio {{ratio}}.
+Use predominant primary color {{primary}}, secondary details {{secondary}}, accent {{accent}}.
+{% if transparent %}transparent background,{% endif %} minimalist, flat design, high marketing appeal. 
