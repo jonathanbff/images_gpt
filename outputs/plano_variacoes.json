@@ -1,0 +1,61 @@
+{
+  "variacoes": [
+    {
+      "id": "variacao1",
+      "cores": {
+        "primaria": "#D32F2F",
+        "secundaria": "#F5F5F5",
+        "destaque": "#F5F5F5",
+        "background": "#D32F2F",
+        "texto": "#FFFFFF",
+        "derivacao": "complementar"
+      },
+      "textos": {
+        "1": "Empréstimo de até:",
+        "2": "R$ 5.000*",
+        "3": "Prazo: 24 meses",
+        "4": "Solicite com seu CPF*",
+        "5": "PEÇA AGORA!"
+      },
+      "ideia_grafica": "A estrutura compositiva do design original é mantida rigorosamente. A posição dos elementos textuais e botões é idêntica à original, com os mesmos tamanhos e espaçamentos. O fundo retangular (#D32F2F) substitui o anterior, proporcionando um contraste forte e legível com o texto branco (#FFFFFF). O título 'Empréstimo de até:' e os textos informativos foram mantidos com o mesmo comprimento e hierarquia, enquanto o valor do empréstimo foi alterado para R$ 5.000*. As informações sobre o prazo e a instrução de solicitação foram ajustadas, mas com comprimento semelhante, mantendo a clareza. O botão 'PEÇA JÁ!' foi renomeado para 'PEÇA AGORA!', mas mantém a mesma tipografia e proporção. Todos os elementos gráficos estão em suas posições originais, garantindo a integridade do design."
+    },
+    {
+      "id": "variacao2",
+      "cores": {
+        "primaria": "#1976D2",
+        "secundaria": "#FFFFFF",
+        "destaque": "#FFEB3B",
+        "background": "#1976D2",
+        "texto": "#FFFFFF",
+        "derivacao": "análoga"
+      },
+      "textos": {
+        "1": "Empréstimo de até:",
+        "2": "R$ 4.000*",
+        "3": "Prazo: 18 meses",
+        "4": "Solicite com seu CPF*",
+        "5": "FAÇA SUA SOLICITAÇÃO!"
+      },
+      "ideia_grafica": "A estrutura original é mantida com precisão, preservando a distribuição espacial dos elementos. O fundo azul (#1976D2) oferece um contraste agradável com o texto em branco (#FFFFFF). O título permanece o mesmo, enquanto o valor do empréstimo foi ajustado para R$ 4.000*, e o prazo foi alterado para 18 meses, todos mantendo o tom e a hierarquia originais. A chamada à ação foi mudada para 'FAÇA SUA SOLICITAÇÃO!', mas os elementos visuais foram preservados em suas proporções e posições, respeitando a legibilidade e o fluxo visual."
+    },
+    {
+      "id": "variacao3",
+      "cores": {
+        "primaria": "#388E3C",
+        "secundaria": "#FFFFFF",
+        "destaque": "#FF9800",
+        "background": "#388E3C",
+        "texto": "#FFFFFF",
+        "derivacao": "monocromática"
+      },
+      "textos": {
+        "1": "Empréstimo de até:",
+        "2": "R$ 2.500*",
+        "3": "Prazo: 10 meses",
+        "4": "Solicite só com seu CPF*",
+        "5": "SOLICITE AGORA!"
+      },
+      "ideia_grafica": "Esta variação mantém a estrutura exata do design original, com cada elemento textualmente posicionado e proporcional. O fundo verde (#388E3C) substitui o anterior, mantendo o contraste com o texto suave em branco (#FFFFFF). O valor do empréstimo foi reduzido para R$ 2.500*, e o prazo foi ajustado para 10 meses, mantendo a mesma hierarquia e comprimento visual. A instrução para solicitar o empréstimo foi levemente modificada, mas a essência do texto permanece. O botão de ação foi renomeado para 'SOLICITE AGORA!', preservando a tipografia e proporções originais. Todos os detalhes gráficos e textuais respeitam as diretrizes de design, garantindo uma coesão visual."
+    }
+  ]
+}

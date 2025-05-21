@@ -1,6 +1,28 @@
-{{idea}}. Criar uma imagem de marketing com proporção exata {{ratio}}.
-Usar cores: primária {{primary}} (dominante), secundária {{secondary}} (detalhes) e destaque {{accent}} (realces).
-{% if transparent %}Criar com fundo transparente,{% endif %} 
-Estilo: Visual de marketing limpo e de alta qualidade com foco profissional no produto.
-Composição deve ser equilibrada com hierarquia visual clara. 
-Gerar em estilo fotorrealista com detalhes finos e texturização. 
+{{idea}}
+
+INSTRUÇÕES PARA ANÚNCIO DIGITAL OTIMIZADO:
+Recriar este anúncio para plataformas de marketing digital (Facebook/Instagram/Google Ads) com proporção {{ratio}}, preservando:
+- LAYOUT: mesma estrutura de grid, alinhamentos e espaçamentos que tornam o anúncio reconhecível
+- ELEMENTOS: posicionamento idêntico, hierarquia clara de informações e apelo visual para alto CTR
+- COMPOSIÇÃO: mesmo fluxo de leitura e jornada visual que leva ao CTA
+
+ALTERAÇÕES PERMITIDAS - APENAS:
+- CORES: primária {{primary}} (80% da superfície), secundária {{secondary}} (detalhes), destaque {{accent}} (CTA e pontos focais)
+- TEXTOS: mensagens com mesmo comprimento e propósito, otimizadas para leads e conversão
+- DETALHES: pequenos refinamentos que aumentem o apelo para audiências de redes sociais
+
+{% if transparent %}TRANSPARÊNCIA: fundo transparente para integração com feeds sociais
+{% endif %}
+
+REQUISITOS PARA PLATAFORMAS DIGITAIS:
+- LEGIBILIDADE: todo texto deve ser facilmente legível em dispositivos móveis
+- SIMPLICIDADE: comunicação direta e focada para atenção em scroll rápido
+- IMPACTO: primeiro 2 segundos de visualização devem comunicar valor principal
+- FORMATO: otimizado para exibição em feed social com alta taxa de cliques
+
+RESULTADO FINAL DEVE:
+- Parecer um anúncio profissional de alta conversão
+- Manter a identidade visual da marca
+- Atrair atenção rapidamente em ambientes digitais
+- Ter apelo emocional e proposta de valor clara
+- Conduzir visualmente à ação desejada (CTA) 

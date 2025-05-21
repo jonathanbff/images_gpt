@@ -1,0 +1,150 @@
+{
+  "canvas_size": {
+    "w": 1365,
+    "h": 768
+  },
+  "placeholders": [
+    {
+      "id": "1",
+      "type": "text",
+      "value": "Empréstimo de até:",
+      "bbox": [
+        50,
+        50,
+        300,
+        50
+      ],
+      "font": {
+        "color": "#FFFFFF",
+        "size": 24,
+        "family": "sans-serif",
+        "weight": "bold",
+        "alignment": "left",
+        "style": "normal"
+      },
+      "layer": 1,
+      "description": "Título principal que introduz a oferta de empréstimo.",
+      "visual_hierarchy": "primário"
+    },
+    {
+      "id": "2",
+      "type": "text",
+      "value": "R$ 3.000*",
+      "bbox": [
+        50,
+        120,
+        300,
+        80
+      ],
+      "font": {
+        "color": "#FFFFFF",
+        "size": 48,
+        "family": "sans-serif",
+        "weight": "bold",
+        "alignment": "left",
+        "style": "normal"
+      },
+      "layer": 1,
+      "description": "Valor máximo do empréstimo oferecido.",
+      "visual_hierarchy": "primário"
+    },
+    {
+      "id": "3",
+      "type": "text",
+      "value": "Prazo: 12 meses",
+      "bbox": [
+        50,
+        220,
+        200,
+        40
+      ],
+      "font": {
+        "color": "#FFFFFF",
+        "size": 20,
+        "family": "sans-serif",
+        "weight": "normal",
+        "alignment": "left",
+        "style": "normal"
+      },
+      "layer": 1,
+      "description": "Informação sobre o prazo de pagamento do empréstimo.",
+      "visual_hierarchy": "secundário"
+    },
+    {
+      "id": "4",
+      "type": "text",
+      "value": "Solicite apenas com seu CPF*",
+      "bbox": [
+        50,
+        270,
+        300,
+        40
+      ],
+      "font": {
+        "color": "#FFFFFF",
+        "size": 20,
+        "family": "sans-serif",
+        "weight": "normal",
+        "alignment": "left",
+        "style": "normal"
+      },
+      "layer": 1,
+      "description": "Instrução sobre como solicitar o empréstimo.",
+      "visual_hierarchy": "secundário"
+    },
+    {
+      "id": "5",
+      "type": "button",
+      "value": "PEÇA JÁ!",
+      "bbox": [
+        50,
+        350,
+        200,
+        50
+      ],
+      "font": {
+        "color": "#FFFFFF",
+        "size": 20,
+        "family": "sans-serif",
+        "weight": "bold",
+        "alignment": "center",
+        "style": "normal"
+      },
+      "layer": 2,
+      "description": "Botão de ação para solicitar o empréstimo.",
+      "visual_hierarchy": "primário"
+    },
+    {
+      "id": "6",
+      "type": "shape",
+      "shape_type": "retângulo",
+      "value": "#6A1B9A",
+      "bbox": [
+        0,
+        0,
+        1365,
+        768
+      ],
+      "opacity": 1.0,
+      "border": {
+        "color": "#FFFFFF",
+        "width": 0
+      },
+      "corners": "reto",
+      "shadow": false,
+      "layer": 0,
+      "description": "Fundo da imagem que proporciona contraste com o texto."
+    }
+  ],
+  "color_palette": {
+    "primary": "#6A1B9A",
+    "secondary": "#FFFFFF",
+    "accent": "#FFFFFF",
+    "text": "#FFFFFF",
+    "background": "#6A1B9A",
+    "all_colors": [
+      "#6A1B9A",
+      "#FFFFFF"
+    ]
+  }
+}
