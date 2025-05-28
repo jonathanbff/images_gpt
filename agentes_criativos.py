@@ -43,8 +43,8 @@ st.set_page_config(
 )
 
 # Constantes e configurações
-MODEL_VISION = "gpt-4o-mini"
-MODEL_TEXT = "gpt-4o-mini"
+MODEL_VISION = "gpt-4o"
+MODEL_TEXT = "gpt-4o"
 MODEL_IMAGE = "gpt-image-1"
 
 # Diretório para arquivos temporários
@@ -282,6 +282,8 @@ def agente_composer(img_path):
                 }
             }
         }
+
+        DEIXE A DESCRIÇÃO DA FORMA MAIS COMPLETA POSSÍVEL.
         """
         
         # Primeira tentativa com temperatura 0 para máxima precisão
@@ -481,68 +483,12 @@ def agente_copy(composition_analysis):
 # Implementação do Agente Compositor Detalhado
 def agente_compositor_detalhado(composition_analysis, approved_copy, colors):
     """
-    Agente compositor detalhado: Cria um prompt extremamente descritivo para o design
+    Agente compositor detalhado: Cria uma estrutura JSON para o image creator,
     baseado na análise da composição e nos textos aprovados.
     """
-    log("Agente Compositor Detalhado: Criando prompt estruturado e detalhado")
+    log("Agente Compositor Detalhado: Criando estrutura JSON para image creator")
     
     try:
-        # Função para variar o matiz das cores
-        def shift_hue(hex_color, degrees):
-            """Desloca o matiz de uma cor em X graus no círculo cromático"""
-            hex_color = hex_color.lstrip('#')
-            
-            try:
-                # Converter hexadecimal para RGB
-                r = int(hex_color[0:2], 16) / 255.0
-                g = int(hex_color[2:4], 16) / 255.0
-                b = int(hex_color[4:6], 16) / 255.0
-                
-                # Converter RGB para HSL
-                max_val = max(r, g, b)
-                min_val = min(r, g, b)
-                h, s, l = 0, 0, (max_val + min_val) / 2
-                
-                if max_val == min_val:
-                    h, s = 0, 0  # acromático
-                else:
-                    d = max_val - min_val
-                    s = d / (2 - max_val - min_val) if l > 0.5 else d / (max_val + min_val)
-                    
-                    if max_val == r:
-                        h = (g - b) / d + (6 if g < b else 0)
-                    elif max_val == g:
-                        h = (b - r) / d + 2
-                    else:
-                        h = (r - g) / d + 4
-                    
-                    h /= 6
-                
-                # Ajustar matiz
-                h = (h + degrees/360) % 1
-                
-                # Converter de volta para RGB
-                def hue_to_rgb(p, q, t):
-                    if t < 0: t += 1
-                    if t > 1: t -= 1
-                    if t < 1/6: return p + (q - p) * 6 * t
-                    if t < 1/2: return q
-                    if t < 2/3: return p + (q - p) * (2/3 - t) * 6
-                    return p
-                
-                q = l * (1 + s) if l < 0.5 else l + s - l * s
-                p = 2 * l - q
-                
-                r = hue_to_rgb(p, q, h + 1/3)
-                g = hue_to_rgb(p, q, h)
-                b = hue_to_rgb(p, q, h - 1/3)
-                
-                # Converter de volta para hexadecimal
-                return f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
-            except Exception:
-                # Em caso de erro, retornar a cor original
-                return f"#{hex_color}"
-        
         # Extrair dimensões da imagem
         canvas_size = composition_analysis.get("canvas_size", {"w": 1024, "h": 1536})
         width, height = canvas_size.get("w", 1024), canvas_size.get("h", 1536)
@@ -555,463 +501,415 @@ def agente_compositor_detalhado(composition_analysis, approved_copy, colors):
             if text_id and selected_text:
                 text_replacements[text_id] = selected_text
         
-        # Aplicar textos aprovados aos elementos originais (preservando posição e estilo)
-        text_elements = []
-        shape_elements = []
-        
-        for p in composition_analysis.get("placeholders", []):
-            if p.get("type") == "text":
-                element = copy.deepcopy(p)
-                if p.get("id") in text_replacements:
-                    element["value"] = text_replacements[p.get("id")]
-                text_elements.append(element)
-            elif p.get("type") == "shape":
-                shape_elements.append(copy.deepcopy(p))
-        
-        # Criar descrição da paleta de cores com base na análise original
+        # Identificar elementos principais da composição
         color_palette = composition_analysis.get("color_palette", {})
-        all_colors = color_palette.get("all_colors", [colors["primary"], colors["secondary"], colors["accent"]])
+        primary_color = colors.get("primary", color_palette.get("primary", "#800080"))
+        secondary_color = colors.get("secondary", color_palette.get("secondary", "#FFFFFF"))
+        accent_color = colors.get("accent", color_palette.get("accent", "#FFA500"))
+        text_color = color_palette.get("text", "#1F1F1F")
+        background_color = color_palette.get("background", secondary_color)
         
-        # Combinação das cores originais com as cores variadas
-        color_description = f"""
-PALETA DE CORES (baseada na imagem original):
-- Cor primária: {colors['primary']} (mantendo o esquema cromático da análise original)
-- Cor secundária: {colors['secondary']}
-- Cor de destaque: {colors['accent']}
-- Cores adicionais da imagem original: {', '.join(all_colors[:5])}
-- Cor de texto principal: {color_palette.get('text', '#1F1F1F')}
-- Cor de fundo principal: {color_palette.get('background', colors['secondary'])}
-"""
+        # Criar paleta de cores completa
+        color_palette_list = [
+            primary_color,
+            secondary_color,
+            accent_color,
+            text_color,
+            "#05A874"  # Cor adicional para elementos secundários
+        ]
         
-        # Detalhes de texturas da imagem original
-        textures = composition_analysis.get("textures", {})
-        if textures:
-            color_description += "\nTEXTURAS (baseadas na imagem original):\n"
-            for texture_name, texture_info in textures.items():
-                texture_type = texture_info.get("type", "flat")
-                texture_colors = texture_info.get("colors", [])
-                texture_direction = texture_info.get("direction", "none")
-                
-                color_description += f"- {texture_name}: tipo {texture_type}"
-                if texture_colors:
-                    color_description += f", cores {', '.join(texture_colors[:3])}"
-                if texture_direction != "none":
-                    color_description += f", direção {texture_direction}"
-                color_description += "\n"
+        # Preparar placeholders
+        placeholders = []
         
-        # Criar descrição de layout fiel à imagem original
-        layout_description = "LAYOUT E ESTRUTURA (reproduzindo a imagem original):\n"
+        # Adicionar background
+        placeholders.append({
+            "id": "background",
+            "type": "background-shape",
+            "role": "background",
+            "style": {
+                "fillColor": f"gradient from textures.background"
+            }
+        })
         
-        # Mapeamento de regiões ocupadas para determinar o layout
-        regions = {
-            "top": [], "middle": [], "bottom": [],
-            "left": [], "center": [], "right": []
-        }
+        # Configurar texturas
+        textures = {}
         
-        # Analisar todos os elementos para determinar a distribuição no layout
-        all_elements = text_elements + shape_elements
-        for elem in all_elements:
-            bbox = elem.get("bbox", [0, 0, 0, 0])
-            elem_center_x = bbox[0] + bbox[2]/2
-            elem_center_y = bbox[1] + bbox[3]/2
-            
-            # Classificar verticalmente
-            if elem_center_y < height * 0.33:
-                regions["top"].append(elem)
-            elif elem_center_y < height * 0.66:
-                regions["middle"].append(elem)
-            else:
-                regions["bottom"].append(elem)
-                
-            # Classificar horizontalmente
-            if elem_center_x < width * 0.33:
-                regions["left"].append(elem)
-            elif elem_center_x < width * 0.66:
-                regions["center"].append(elem)
-            else:
-                regions["right"].append(elem)
-        
-        # Descrever a distribuição dos elementos
-        layout_description += "- Distribuição de elementos mantida fiel à imagem original:\n"
-        
-        for region_name, elems in regions.items():
-            if elems:
-                element_types = []
-                for e in elems:
-                    if e.get("type") == "text":
-                        element_types.append(f"texto '{e.get('value', '')}'" if len(e.get('value', '')) < 30 else f"texto '{e.get('value', '')[:30]}...'")
-                    else:
-                        element_types.append(f"{e.get('shape_type', 'forma')} {e.get('value', '')}")
-                
-                layout_description += f"  * Região {region_name}: {len(elems)} elementos ({', '.join(element_types[:3])})\n"
-        
-        # Analisar fundos e estruturas principais
+        # Analisar tipo de fundo
         background_info = composition_analysis.get("textures", {}).get("background", {})
         background_type = background_info.get("type", "flat")
         
-        if background_type == "gradient" or background_type == "radial-gradient":
-            layout_description += f"""
-- Fundo com {background_type}:
-  * Cores: {', '.join(background_info.get('colors', [colors['primary'], shift_hue(colors['primary'], -30)]))}
-  * Direção: {background_info.get('direction', 'top-to-bottom')}
-"""
-        elif background_type == "pattern":
-            layout_description += f"""
-- Fundo com padrão do tipo {background_info.get('type', 'geométrico')}:
-  * Cores: {', '.join(background_info.get('colors', [colors['primary'], colors['secondary']]))}
-"""
+        if background_type == "gradient":
+            textures["background"] = {
+                "type": "linear-gradient",
+                "colors": [primary_color, secondary_color],
+                "direction": background_info.get("direction", "top-to-bottom")
+            }
+        elif background_type == "radial-gradient":
+            textures["background"] = {
+                "type": "radial-gradient",
+                "colors": [primary_color, secondary_color],
+                "center": "top-center"
+            }
         else:
-            # Identificar se existem formas grandes que funcionam como seções
+            # Verificar se há seções distintas
+            shape_elements = [p for p in composition_analysis.get("placeholders", []) if p.get("type") == "shape"]
             large_shapes = [s for s in shape_elements if (s.get("bbox", [0,0,0,0])[2] > width*0.5 and s.get("bbox", [0,0,0,0])[3] > height*0.2)]
             
-            if large_shapes:
-                layout_description += "- Estrutura com seções de cores distintas:\n"
-                for i, shape in enumerate(large_shapes):
-                    bbox = shape.get("bbox", [0, 0, 0, 0])
-                    position_y = (bbox[1] + bbox[3]/2) / height
-                    position_str = "superior" if position_y < 0.33 else "central" if position_y < 0.66 else "inferior"
-                    shape_color = shape.get("value", colors["primary"])
-                    
-                    layout_description += f"  * Seção {position_str}: forma {shape.get('shape_type', 'retângulo')} na cor {shape_color}\n"
-            else:
-                layout_description += f"""
-- Fundo principal na cor {color_palette.get('background', colors['secondary'])}
-- Elementos distribuídos de acordo com a hierarquia visual original
-"""
-        
-        # Descrição detalhada de cada elemento de texto preservando posições originais
-        text_description = "ELEMENTOS DE TEXTO (mantendo posições exatas da imagem original):\n"
-        
-        for i, text in enumerate(text_elements):
-            value = text.get("value", "")
-            font = text.get("font", {})
-            color = font.get("color", "#000000")
-            size = font.get("size", 16)
-            weight = font.get("weight", "regular")
-            alignment = font.get("alignment", "center")
-            visual_hierarchy = text.get("visual_hierarchy", "")
-            bbox = text.get("bbox", [0, 0, 0, 0])
-            
-            # Determinar posicionamento exato
-            x_pos = bbox[0]
-            y_pos = bbox[1]
-            width_percent = int((bbox[2] / width) * 100)
-            x_center_percent = int(((bbox[0] + bbox[2]/2) / width) * 100)
-            y_center_percent = int(((bbox[1] + bbox[3]/2) / height) * 100)
-            
-            # Descrição de posicionamento preciso
-            position_desc = f"posição exata a {x_center_percent}% da largura e {y_center_percent}% da altura"
-            if x_center_percent < 33:
-                position_desc += ", alinhado à esquerda"
-            elif x_center_percent > 66:
-                position_desc += ", alinhado à direita"
-            else:
-                position_desc += ", centralizado horizontalmente"
+            if large_shapes and len(large_shapes) >= 2:
+                upper_shapes = [s for s in large_shapes if s.get("bbox", [0,0,0,0])[1] < height * 0.5]
+                lower_shapes = [s for s in large_shapes if s.get("bbox", [0,0,0,0])[1] >= height * 0.5]
                 
-            # Determinar estilo de destaque baseado na análise original
-            highlight_style = f"tamanho {size}px, peso {weight}, alinhamento {alignment}"
-            highlight_style += f", na cor {color}"
-            
-            if visual_hierarchy == "primary":
-                highlight_style = f"destaque principal, {highlight_style}"
-            elif visual_hierarchy == "secondary":
-                highlight_style = f"destaque secundário, {highlight_style}"
-            
-            # Adicionar descrição do texto com posicionamento preciso
-            text_description += f"""
-- Texto "{value}":
-  * {position_desc}
-  * Estilo: {highlight_style}
-  * Largura aproximada: {width_percent}% da largura total
-  * Preservar exatamente essa hierarquia visual
-"""
-        
-        # Descrição de elementos visuais originais (formas, botões, etc.)
-        visual_elements = "ELEMENTOS VISUAIS (da imagem original):\n"
-        
-        # Identificar e descrever elementos com funções específicas
-        buttons = []
-        containers = []
-        decorative = []
-        
-        for shape in shape_elements:
-            shape_type = shape.get("shape_type", "rectangle")
-            value = shape.get("value", "")  # cor
-            bbox = shape.get("bbox", [0, 0, 0, 0])
-            width_percent = int((bbox[2] / width) * 100)
-            height_percent = int((bbox[3] / height) * 100)
-            x_center_percent = int(((bbox[0] + bbox[2]/2) / width) * 100)
-            y_center_percent = int(((bbox[1] + bbox[3]/2) / height) * 100)
-            
-            # Posicionamento exato
-            position_desc = f"posição a {x_center_percent}% da largura e {y_center_percent}% da altura"
-            
-            # Classificar o elemento pela função aparente
-            if height_percent < 15 and width_percent < 50 and width_percent > 15:
-                buttons.append({
-                    "shape": shape,
-                    "position": position_desc,
-                    "width": width_percent,
-                    "height": height_percent
-                })
-            elif width_percent > 50 and height_percent > 20:
-                containers.append({
-                    "shape": shape,
-                    "position": position_desc,
-                    "width": width_percent,
-                    "height": height_percent
-                })
+                if upper_shapes and lower_shapes:
+                    upper_color = upper_shapes[0].get("value", primary_color)
+                    lower_color = lower_shapes[0].get("value", secondary_color)
+                    textures["background"] = {
+                        "type": "split-horizontal",
+                        "colors": [upper_color, lower_color],
+                        "split_position": 0.6  # 60% superior, 40% inferior
+                    }
+                else:
+                    textures["background"] = {
+                        "type": "flat",
+                        "color": primary_color
+                    }
             else:
-                decorative.append({
-                    "shape": shape,
-                    "position": position_desc,
-                    "width": width_percent,
-                    "height": height_percent
+                textures["background"] = {
+                    "type": "flat",
+                    "color": primary_color
+                }
+        
+        # Adicionar texturas para elementos visuais
+        textures["credit_card"] = {
+            "type": "fluid-marble",
+            "colors": [primary_color, accent_color, secondary_color],
+            "direction": "diagonal",
+            "intensity": "medium"
+        }
+        
+        textures["button_unselected"] = {
+            "type": "flat",
+            "color": "#E0E0E0"
+        }
+        
+        textures["button_selected"] = {
+            "type": "glossy",
+            "gradient": [primary_color, secondary_color]
+        }
+        
+        textures["slider_track"] = {
+            "type": "metallic",
+            "color": "#CCCCCC"
+        }
+        
+        # Configurar iluminação
+        lighting = {
+            "card": {
+                "type": "specular",
+                "position": "top-right",
+                "intensity": "high",
+                "effect": "adds depth and gloss to card surface"
+            },
+            "background": {
+                "type": "soft-glow",
+                "position": "center",
+                "intensity": "low",
+                "effect": "focus user attention on content center"
+            },
+            "highlight_elements": {
+                "targets": ["limit-amount", "cta-button"],
+                "effect": "subtle light bloom"
+            }
+        }
+        
+        # Processar textos para adicionar aos placeholders
+        for p in composition_analysis.get("placeholders", []):
+            if p.get("type") == "text":
+                element_id = p.get("id", "")
+                text_value = text_replacements.get(element_id, p.get("value", ""))
+                text_description = p.get("description", "")
+                visual_hierarchy = p.get("visual_hierarchy", "")
+                bbox = p.get("bbox", [0, 0, 0, 0])
+                font = p.get("font", {})
+                
+                # Determinar tipo de texto e estilo baseado no conteúdo e hierarquia
+                if visual_hierarchy == "primary" or "headline" in text_description.lower():
+                    text_type = "headline-text"
+                    text_role = "headline"
+                    font_size = font.get("size", 32)
+                    font_weight = "bold"
+                    text_id = "main-headline"
+                elif "valor" in text_description.lower() or any(currency in text_value for currency in ["R$", "$", "€"]):
+                    text_type = "headline-text"
+                    text_role = "conversion-driver"
+                    font_size = font.get("size", 38)
+                    font_weight = "bold"
+                    text_id = "limit-amount"
+                elif "legal" in text_description.lower() or text_value.startswith("*"):
+                    text_type = "disclaimer-text"
+                    text_role = "legal"
+                    font_size = font.get("size", 10)
+                    font_weight = "regular"
+                    text_id = "disclaimer-text"
+                elif len(text_value) > 80:
+                    text_type = "disclaimer-text"
+                    text_role = "legal"
+                    font_size = font.get("size", 10)
+                    font_weight = "regular"
+                    text_id = "footer-disclaimer"
+                else:
+                    text_type = "body-text"
+                    text_role = "body"
+                    font_size = font.get("size", 16)
+                    font_weight = "regular"
+                    text_id = f"body-text-{len(placeholders)}"
+                
+                # Determinar alinhamento baseado na posição
+                x_center = bbox[0] + bbox[2]/2
+                alignment = "center"
+                if x_center < width * 0.33:
+                    alignment = "left"
+                elif x_center > width * 0.66:
+                    alignment = "right"
+                
+                # Determinar cor do texto baseado no fundo e no papel
+                if text_role == "headline" or text_role == "conversion-driver":
+                    if textures["background"]["type"] == "flat" and textures["background"]["color"] == primary_color:
+                        text_color = secondary_color
+                    else:
+                        text_color = primary_color
+                else:
+                    text_color = font.get("color", text_color)
+                
+                # Adicionar elemento de texto
+                placeholders.append({
+                    "id": text_id,
+                    "type": text_type,
+                    "text": text_value,
+                    "role": text_role,
+                    "style": {
+                        "fontColor": text_color,
+                        "fontSize": font_size,
+                        "fontWeight": font_weight,
+                        "alignment": alignment,
+                        "textTransform": "uppercase" if text_role == "headline" else "none"
+                    }
                 })
         
-        # Descrever botões
-        if buttons:
-            visual_elements += "- Botões (preservar exatamente como na imagem original):\n"
-            for i, btn in enumerate(buttons):
-                shape = btn["shape"]
-                visual_elements += f"""
-  * Botão {i+1}: {shape.get('shape_type', 'retângulo')} na cor {shape.get('value', '#CCCCCC')}
-    - {btn['position']}
-    - Tamanho: {btn['width']}% × {btn['height']}% da tela
-    - Cantos: {shape.get('corners', 'arredondados')}
-    - Opacidade: {shape.get('opacity', 1.0)}
-    - {shape.get('texture', {}).get('type', 'flat')}
-"""
+        # Adicionar elementos visuais comuns
         
-        # Descrever containers
-        if containers:
-            visual_elements += "- Containers/Seções principais:\n"
-            for i, cont in enumerate(containers):
-                shape = cont["shape"]
-                visual_elements += f"""
-  * Container {i+1}: {shape.get('shape_type', 'retângulo')} na cor {shape.get('value', '#FFFFFF')}
-    - {cont['position']}
-    - Tamanho: {cont['width']}% × {cont['height']}% da tela
-    - Cantos: {shape.get('corners', 'arredondados')}
-    - Opacidade: {shape.get('opacity', 1.0)}
-    - Conteúdo posicionado conforme layout original
-"""
+        # Cartão de crédito (se relevante)
+        # Verificar se há menção a cartão no texto
+        has_card_references = any("cartão" in p.get("text", "").lower() or "card" in p.get("text", "").lower() for p in placeholders)
+        if has_card_references:
+            placeholders.append({
+                "id": "credit-card-image",
+                "type": "illustration",
+                "role": "hero",
+                "style": {
+                    "position": "top",
+                    "angle": "rotated (approx. -20 degrees)",
+                    "colors": [primary_color, accent_color],
+                    "texture": "textures.credit_card",
+                    "features": ["chip", "contactless icon", "VISA logo"],
+                    "lighting": "lighting.card"
+                }
+            })
         
-        # Descrever elementos decorativos
-        if decorative:
-            visual_elements += "- Elementos decorativos/gráficos:\n"
-            for i, dec in enumerate(decorative):
-                shape = dec["shape"]
-                visual_elements += f"""
-  * Elemento {i+1}: {shape.get('shape_type', 'forma')} na cor {shape.get('value', '#CCCCCC')}
-    - {dec['position']}
-    - Tamanho: {dec['width']}% × {dec['height']}% da tela
-"""
+        # Slider para controle (se relevante)
+        if any("limite" in p.get("text", "").lower() or "valor" in p.get("text", "").lower() for p in placeholders):
+            placeholders.append({
+                "id": "limit-slider",
+                "type": "input-slider",
+                "role": "interactive-control",
+                "style": {
+                    "trackTexture": "textures.slider_track",
+                    "thumbColor": primary_color,
+                    "thumbShadow": "light drop shadow"
+                }
+            })
         
-        # Descrever efeitos especiais e iluminação da imagem original
-        lighting = composition_analysis.get("lighting", {})
-        effects_description = "EFEITOS VISUAIS E ACABAMENTO (da imagem original):\n"
+        # Grupo de botões (se relevante)
+        if any("vencimento" in p.get("text", "").lower() or "data" in p.get("text", "").lower() for p in placeholders):
+            placeholders.append({
+                "id": "due-date-options",
+                "type": "button-group",
+                "role": "interactive-control",
+                "options": [
+                    {"text": "05", "selected": False, "texture": "textures.button_unselected"},
+                    {"text": "10", "selected": False, "texture": "textures.button_unselected"},
+                    {"text": "15", "selected": True, "texture": "textures.button_selected", "lighting": "lighting.highlight_elements"},
+                    {"text": "25", "selected": False, "texture": "textures.button_unselected"}
+                ],
+                "style": {
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "fontColor": text_color
+                }
+            })
         
-        if lighting:
-            main_light = lighting.get("main", {})
-            effects_description += f"""
-- Iluminação principal: tipo {main_light.get('type', 'ambient')}
-  * Posição: {main_light.get('position', 'top-right')}
-  * Intensidade: {main_light.get('intensity', 'medium')}
-  * Efeito: {main_light.get('effect', 'adds depth to the composition')}
-
-- Efeitos de destaque: {lighting.get('highlights', {}).get('effect', 'subtle glow on key elements')}
-"""
+        # Botão CTA
+        placeholders.append({
+            "id": "cta-button",
+            "type": "button",
+            "text": "SOLICITAR AGORA",
+            "role": "call-to-action",
+            "style": {
+                "backgroundColor": accent_color,
+                "fontColor": secondary_color,
+                "fontSize": 18,
+                "fontWeight": "bold",
+                "cornerRadius": "rounded",
+                "alignment": "center",
+                "textTransform": "uppercase",
+                "shadow": "subtle drop shadow"
+            }
+        })
         
-        effects_description += """
-- Aplique sombras suaves nos textos principais para garantir legibilidade perfeita
-- Adicione profundidade com micro-sombras em elementos sobrepostos
-- Inclua reflexos sutis em superfícies (botões, caixas) para aparência profissional
-- Mantenha consistência nos estilos de fonte e espaçamentos
-- Reserve espaço limpo para inserção posterior de logo na parte inferior
-"""
+        # Logo
+        placeholders.append({
+            "id": "brand-logo",
+            "type": "logo",
+            "text": "Utua",
+            "role": "logo",
+            "style": {
+                "fontColor": "#05A874",
+                "fontWeight": "bold",
+                "alignment": "center"
+            }
+        })
         
-        # Combinar todas as seções em um prompt completo, mantendo fidelidade ao original
-        prompt = f"""
-Crie uma imagem no formato vertical, com dimensões exatas de {width}x{height} pixels, que reproduza fielmente o layout da imagem original analisada, seguindo estas especificações detalhadas:
-
-PALETA DE CORES:
-- Cor primária: {colors['primary']} (use para elementos principais, áreas de destaque e textos importantes)
-- Cor secundária: {colors['secondary']} (use para fundos, áreas neutras e elementos de suporte)
-- Cor de destaque/acento: {colors['accent']} (use para botões, ícones e elementos interativos)
-- Cor de texto principal: {color_palette.get('text', '#1F1F1F')} (para textos de alta legibilidade)
-- Cor de texto secundário: #5A5A5A (para textos legais e menos importantes)
-
-ESTRUTURA DO FUNDO:
-{layout_description}
-
-ELEMENTOS DE TEXTO (posicionados exatamente como na imagem original):
-{text_description}
-
-ELEMENTOS VISUAIS (reproduzindo fielmente os elementos da imagem original):
-{visual_elements}
-
-COMPONENTES ESPECÍFICOS E DETALHES INTERNOS:
-{len(card_elements) > 0 and f"""
-CARTÃO DE CRÉDITO/DÉBITO:
-- Posicionado exatamente como na imagem original
-- Textura de mármore fluido, misturando tons de {colors['primary']}, {shift_hue(colors['primary'], 20)} e {shift_hue(colors['primary'], 40)}
-- Detalhes realistas: chip dourado ou prateado com circuitos visíveis, símbolo de contactless com ondas
-- Números impressos em alto relevo com fonte específica para cartões (divididos em grupos de 4, formato: 5678 **** **** 1234)
-- Data de validade no formato MM/AA na posição correta abaixo do número principal
-- Logo da bandeira (Visa/Mastercard/Elo/American Express) no canto inferior direito
-- Nome do cliente em fonte específica (não preencher com texto real, usar "NOME DO CLIENTE")
-- Brilho especular vindo do topo direito criando reflexos na superfície
-- Rotação suave para visual dinâmico (manter ângulo exatamente como na imagem original)
-- Sombra realista abaixo do cartão com desfoque suave para sensação de profundidade
-- Borda fina mais clara ao redor de todo o cartão para efeito de separação com o fundo
-""" or ""}
-
-{len(button_elements) > 0 and f"""
-BOTÕES:
-- Botões com cantos perfeitamente arredondados (raio de 8-12px)
-- Botão principal (CTA) na cor {colors['accent']} com texto em branco ou {colors['secondary']}
-- Estilo 3D sutilmente elevado com pequeno gradiente vertical (mais claro no topo)
-- Botões secundários em {shift_hue(colors['primary'], 30)} ou em cinza claro (#E0E0E0)
-- Efeito de pressão com sombra interna nos botões selecionados
-- Textura glossy sutil nos botões com reflexo horizontal na parte superior
-- Borda fina mais clara (1px) no topo e esquerda, e mais escura na direita e base
-- Sombra externa muito suave (2-3px de desfoque, opacidade 20%)
-- Texto centralizado com padding horizontal adequado (pelo menos 20px de cada lado)
-- Ícone opcional alinhado ao texto (se existir na imagem original)
-""" or ""}
-
-{len(slider_elements) > 0 and f"""
-SLIDER/CONTROLE DESLIZANTE:
-- Trilho horizontal com textura metálica elegante em cinza gradiente (#CCCCCC até #999999)
-- Altura exata do trilho como na imagem original (geralmente 4-6px)
-- Botão deslizante (thumb) circular ou oval na cor {colors['primary']} com tamanho exato como original
-- Área preenchida do trilho (à esquerda do thumb) com gradiente na cor {colors['primary']} até {shift_hue(colors['primary'], 20)}
-- Leve sombra no botão deslizante para sensação de elevação (1-2px offset, 3-4px blur)
-- Efeito de brilho interno no thumb para aparência premium
-- Marcadores de valor (ticks) abaixo do trilho, se presentes na imagem original
-- Valores numéricos exatos nos extremos (mínimo/máximo) como na imagem original
-- Posição do thumb mantida exatamente como na referência
-""" or ""}
-
-{len(chart_elements) > 0 and f"""
-GRÁFICOS FINANCEIROS:
-- Reproduza exatamente o mesmo tipo de gráfico da imagem original (barras, linhas, pizza, etc.)
-- Utilize as cores primária {colors['primary']} e de destaque {colors['accent']} para os dados principais
-- Para gráficos de linha: linha suave com gradiente abaixo dela, partindo da cor principal até transparente
-- Para gráficos de barra: barras com cantos arredondados e sutil gradiente vertical
-- Para gráficos de pizza: bordas refinadas entre segmentos e leve efeito 3D
-- Legendas ou labels exatamente como na imagem original, com fonte legível e nítida
-- Valores numéricos precisos conforme original, alinhados adequadamente
-- Grid de fundo sutil quando presente na imagem original (linhas cinza claro #EEEEEE)
-- Sombra muito suave sob todo o gráfico para destacá-lo do fundo
-- Manter todos os elementos de interação visíveis na imagem original (tooltips, pontos de dados destacados)
-""" or ""}
-
-{len(icon_elements) > 0 and f"""
-ÍCONES:
-- Ícones minimalistas e modernos na cor {colors['primary']} ou {colors['accent']}
-- Estilo consistente entre todos os ícones (flat, outline, duotone ou solid)
-- Ícones financeiros específicos quando relevantes:
-  * Cifrão/símbolo monetário com design clean para representar dinheiro/pagamento
-  * Carteira ou cartão para pagamentos e transações
-  * Gráfico ascendente para investimentos ou crescimento
-  * Escudo para segurança financeira
-  * Relógio/calendário para prazos e pagamentos
-  * Porcentagem para taxas de juros
-  * Casa para financiamento imobiliário
-  * Mãos para empréstimos ou suporte
-- Tamanho e posicionamento exatos como na imagem original
-- Leve brilho ou sombra quando destacados no design original
-""" or ""}
-
-{len(container_elements) > 0 and f"""
-CAIXAS/CONTÊINERES:
-- Contêineres com cantos arredondados precisos (raio de 12-16px, ou exatamente como original)
-- Fundo em {colors['secondary']} com gradiente muito sutil para evitar aparência plana
-- Borda refinada de 1-2px mais escura ou mais clara conforme design original
-- Sombra externa suave para efeito flutuante (4-6px blur, 30% opacidade)
-- Organização interna do conteúdo mantendo espaçamento e alinhamento da imagem original
-- Linhas separadoras horizontais entre seções quando presentes (cor #E0E0E0, 1px)
-- Headers internos destacados com texto em negrito ou cor contrastante
-- Parte superior possivelmente mais escura/destacada quando usado como cabeçalho
-- Espaçamento interno (padding) consistente, geralmente 16-24px
-- Elementos específicos (ícones, botões) posicionados precisamente como na referência
-""" or ""}
-
-{"""
-ELEMENTOS FINANCEIROS ESPECÍFICOS:
-- Simuladores de valor: caixas com valores monetários destacados em fonte grande e negrito
-  * Cifrão/símbolo monetário alinhado corretamente (precedendo o valor ou sobrescrito)
-  * Valores decimais em tamanho menor ou cor mais clara quando presentes
-  * Rótulos explicativos posicionados acima ou ao lado dos valores
-
-- Taxas de juros: valores percentuais destacados com símbolo "%" claro
-  * Texto explicativo complementar como "ao mês" ou "ao ano" em tamanho menor
-  * Cores contrastantes para diferenciar taxas promocionais ou condições especiais
-
-- Prazos e parcelas: combinação de números e texto com hierarquia clara
-  * Número de parcelas em destaque quando relevante (ex: "12x")
-  * Valor da parcela com símbolo monetário em formato padronizado
-  * Prazo total do financiamento/empréstimo quando aplicável
-
-- Quadro de benefícios: lista de vantagens com ícones associados
-  * Marcadores visuais consistentes (check, bullet points, etc.)
-  * Espaçamento igual entre itens da lista
-  * Ícones alinhados verticalmente à esquerda do texto
-
-- Formulários ou campos: áreas para preenchimento com aparência interativa
-  * Cantos arredondados e borda sutil
-  * Labels posicionados consistentemente (acima ou dentro do campo)
-  * Campos obrigatórios com marcação visual quando identificáveis
-  * Botão de submissão alinhado e destacado com a cor primária ou de destaque
-"""}
-
-EFEITOS E ACABAMENTO:
-- Iluminação principal vinda da direção superior direita
-- Aplique sombras suaves aos elementos principais para criar profundidade
-- Textos principais devem ter sombras sutis para garantir legibilidade em qualquer fundo
-- Botões devem ter efeito de pressão/clique com sombra interna suave
-- Caixas e contêineres devem ter sombra suave para simular elevação
-- Elementos de destaque devem ter brilho sutil (glow) para atrair atenção
-- Mantenha consistência nos estilos de fonte em toda a composição
-- Aplique texturas sutis em áreas grandes para evitar aparência plana
-- Reserve espaço limpo na parte inferior para inserção posterior de logo
-
-INSTRUÇÕES ESPECÍFICAS DE COMPOSIÇÃO:
-- Posicione todos os elementos EXATAMENTE nas mesmas posições relativas da imagem original
-- Mantenha a hierarquia visual e o fluxo de leitura da imagem original
-- Preserve os espaçamentos e margens entre elementos como na imagem analisada
-- Mantenha proporções exatas como especificado ({width}x{height} pixels)
-- Garanta PERFEITA legibilidade de todos os textos com contraste adequado
-- Se a imagem original tiver seções distintas de cor, reproduza-as fielmente
-- Os tamanhos e pesos das fontes devem seguir a hierarquia da imagem original
-- Botões e elementos interativos devem ser claramente identificáveis
-- Elementos decorativos devem complementar o layout sem disputar atenção
-- Áreas de respiro (espaço em branco) devem ser mantidas para equilíbrio visual
-
-IMPORTANTE: Este não é um layout genérico. A composição final deve ser IDÊNTICA à imagem original analisada, apenas com as cores e textos atualizados conforme especificado acima. Todos os elementos, suas posições, tamanhos relativos e hierarquia visual devem ser reproduzidos com máxima fidelidade.
-"""
+        # Criar estrutura final JSON
+        output = {
+            "canvas_size": {"width": width, "height": height},
+            "color_palette": color_palette_list,
+            "textures": textures,
+            "lighting": lighting,
+            "placeholders": placeholders,
+            "mass_variation_targets": ["main-headline", "subheadline", "limit-amount", "credit-card-image", "color_palette"],
+            "animation_suggestions": {
+                "cta-highlight": "Pulse efeito no valor do limite (R$4.000,00)",
+                "card-float": "Animação de leve flutuação do cartão ilustrado",
+                "slider-glow": "Brilho suave no controle de limite",
+                "button-press": "Efeito de pressionamento suave ao clicar nas datas"
+            }
+        }
         
-        log("✓ Prompt detalhado baseado na imagem original criado com sucesso")
-        return prompt
+        # Criar string JSON formatada para saída
+        import json
+        json_output = f"image: {json.dumps(output, indent=2, ensure_ascii=False)}"
+        
+        log("✓ Estrutura JSON para image creator criada com sucesso")
+        return json_output
         
     except Exception as e:
         log(f"⚠️ Erro no Agente Compositor Detalhado: {str(e)}")
         
-        # Retornar um prompt básico em caso de erro
-        return f"""
-Crie uma imagem de anúncio digital profissional que REPRODUZA o layout da imagem original analisada, com dimensões exatas de {width}x{height} pixels.
-
-Use a seguinte paleta de cores:
-- Cor primária: {colors['primary']}
-- Cor secundária: {colors['secondary']}
-- Cor de destaque: {colors['accent']}
-
-IMPORTANTE: Mantenha o mesmo layout e posicionamento de elementos da imagem original.
-Garanta que todos os textos sejam perfeitamente legíveis.
-Reserve espaço na parte inferior para inserção posterior de logo.
-"""
+        # Retornar um JSON básico em caso de erro
+        basic_output = {
+            "canvas_size": {"width": width, "height": height},
+            "color_palette": [colors.get("primary", "#800080"), colors.get("secondary", "#FFFFFF"), colors.get("accent", "#FFA500"), "#1F1F1F", "#05A874"],
+            "textures": {
+                "background": {
+                    "type": "radial-gradient",
+                    "colors": [colors.get("primary", "#800080"), colors.get("secondary", "#FFFFFF")],
+                    "center": "top-center"
+                },
+                "credit_card": {
+                    "type": "fluid-marble",
+                    "colors": [colors.get("primary", "#800080"), colors.get("accent", "#FFA500"), colors.get("secondary", "#FFFFFF")],
+                    "direction": "diagonal",
+                    "intensity": "medium"
+                },
+                "button_unselected": {
+                    "type": "flat",
+                    "color": "#E0E0E0"
+                },
+                "button_selected": {
+                    "type": "glossy",
+                    "gradient": [colors.get("primary", "#800080"), colors.get("secondary", "#FFFFFF")]
+                },
+                "slider_track": {
+                    "type": "metallic",
+                    "color": "#CCCCCC"
+                }
+            },
+            "lighting": {
+                "card": {
+                    "type": "specular",
+                    "position": "top-right",
+                    "intensity": "high",
+                    "effect": "adds depth and gloss to card surface"
+                },
+                "background": {
+                    "type": "soft-glow",
+                    "position": "center",
+                    "intensity": "low",
+                    "effect": "focus user attention on content center"
+                },
+                "highlight_elements": {
+                    "targets": ["limit-amount", "15"],
+                    "effect": "subtle light bloom"
+                }
+            },
+            "placeholders": [
+                {
+                    "id": "background",
+                    "type": "background-shape",
+                    "role": "background",
+                    "style": {
+                        "fillColor": "gradient from textures.background"
+                    }
+                },
+                {
+                    "id": "main-headline",
+                    "type": "headline-text",
+                    "text": "TÍTULO PRINCIPAL",
+                    "role": "headline",
+                    "style": {
+                        "fontColor": colors.get("primary", "#800080"),
+                        "fontSize": 32,
+                        "fontWeight": "bold",
+                        "alignment": "center",
+                        "textTransform": "uppercase"
+                    }
+                },
+                {
+                    "id": "cta-button",
+                    "type": "button",
+                    "text": "SOLICITAR AGORA",
+                    "role": "call-to-action",
+                    "style": {
+                        "backgroundColor": colors.get("accent", "#FFA500"),
+                        "fontColor": colors.get("secondary", "#FFFFFF"),
+                        "fontSize": 18,
+                        "fontWeight": "bold",
+                        "cornerRadius": "rounded",
+                        "alignment": "center",
+                        "textTransform": "uppercase"
+                    }
+                },
+                {
+                    "id": "brand-logo",
+                    "type": "logo",
+                    "text": "Utua",
+                    "role": "logo",
+                    "style": {
+                        "fontColor": "#05A874",
+                        "fontWeight": "bold",
+                        "alignment": "center"
+                    }
+                }
+            ],
+            "mass_variation_targets": ["main-headline", "color_palette"],
+            "animation_suggestions": {
+                "cta-highlight": "Pulse efeito no botão CTA",
+                "elements-fade": "Entrada suave dos elementos com leve atraso sequencial"
+            }
+        }
+        
+        import json
+        json_output = f"image: {json.dumps(basic_output, indent=2, ensure_ascii=False)}"
+        return json_output
 
 # Implementação do Agente Designer
 def agente_designer(composition_analysis, approved_copy, num_variations=4):

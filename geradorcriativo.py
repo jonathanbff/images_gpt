@@ -26,8 +26,8 @@ from dotenv import load_dotenv
 # Configuração básica
 load_dotenv()
 
-MODEL_VISION = "gpt-4o-mini"
-MODEL_TEXT = "gpt-4o-mini"
+MODEL_VISION = "gpt-4o"
+MODEL_TEXT = "gpt-4o"
 MODEL_IMAGE = "gpt-image-1"
 
 OUT_DIR = Path("outputs")
@@ -244,6 +244,8 @@ def analisar_imagem(img_path):
         }
       ]
     }
+
+    DÊ A DESCRIÇÃO DA FORMA MAIS COMPLETA POSSÍVEL..
     """
     
     # Primeira tentativa com temperatura 0 para máxima precisão
@@ -481,8 +483,212 @@ def gerar_variacoes(spec, num_variacoes=3):
        - Ícones secundários (mantendo estilo e função)
        - Efeitos de sombra ou brilho
     
-    Use o seguinte formato JSON:
-    
+    Exemplo de resposta vencedora:  
+
+    image: {
+    "canvas_size": { "width": 768, "height": 1365 },
+    "color_palette": ["#D90000", "#FFFFFF", "#F1F1F1", "#1F1F1F", "#05A874"],
+    "textures": {
+        "background": {
+        "type": "radial-gradient",
+        "colors": ["#D90000", "#8B0000"],
+        "center": "top-center"
+        },
+        "credit_card": {
+        "type": "fluid-marble",
+        "colors": ["#D90000", "#FF4D4D", "#FFA3A3"],
+        "direction": "diagonal",
+        "intensity": "medium"
+        },
+        "button_unselected": {
+        "type": "flat",
+        "color": "#E0E0E0"
+        },
+        "button_selected": {
+        "type": "glossy",
+        "gradient": ["#D90000", "#A10000"]
+        },
+        "slider_track": {
+        "type": "metallic",
+        "color": "#CCCCCC"
+        }
+    },
+    "lighting": {
+        "card": {
+        "type": "specular",
+        "position": "top-right",
+        "intensity": "high",
+        "effect": "adds depth and gloss to card surface"
+        },
+        "background": {
+        "type": "soft-glow",
+        "position": "center",
+        "intensity": "low",
+        "effect": "focus user attention on content center"
+        },
+        "highlight_elements": {
+        "targets": ["limit-amount", "15"],
+        "effect": "subtle light bloom"
+        }
+    },
+    "placeholders": [
+        {
+        "id": "background",
+        "type": "background-shape",
+        "role": "background",
+        "style": {
+            "fillColor": "gradient from textures.background"
+        }
+        },
+        {
+        "id": "credit-card-image",
+        "type": "illustration",
+        "role": "hero",
+        "style": {
+            "position": "top",
+            "angle": "rotated (approx. -20 degrees)",
+            "colors": ["#D90000", "#F83535"],
+            "texture": "textures.credit_card",
+            "features": ["chip", "contactless icon", "VISA logo"],
+            "lighting": "lighting.card"
+        }
+        },
+        {
+        "id": "main-headline",
+        "type": "headline-text",
+        "text": "CARTÃO DE CRÉDITO",
+        "role": "headline",
+        "style": {
+            "fontColor": "#D90000",
+            "fontSize": 32,
+            "fontWeight": "bold",
+            "alignment": "center",
+            "textTransform": "uppercase",
+            "shadow": "soft, black, opacity 0.2"
+        }
+        },
+        {
+        "id": "subheadline",
+        "type": "subheadline-text",
+        "text": "SEM BUROCRACIA. SOLICITE APENAS COM SEU RG!*",
+        "role": "subheadline",
+        "style": {
+            "fontColor": "#D90000",
+            "fontSize": 18,
+            "fontWeight": "bold",
+            "alignment": "center",
+            "textTransform": "uppercase"
+        }
+        },
+        {
+        "id": "disclaimer-headline",
+        "type": "disclaimer-text",
+        "text": "*Sujeito a aprovação",
+        "role": "legal",
+        "style": {
+            "fontColor": "#1F1F1F",
+            "fontSize": 14,
+            "fontWeight": "regular",
+            "alignment": "center"
+        }
+        },
+        {
+        "id": "limit-label",
+        "type": "body-text",
+        "text": "Qual o limite desejado?",
+        "role": "body",
+        "style": {
+            "fontColor": "#1F1F1F",
+            "fontSize": 16,
+            "fontWeight": "regular",
+            "alignment": "left"
+        }
+        },
+        {
+        "id": "limit-amount",
+        "type": "headline-text",
+        "text": "R$4.000,00",
+        "role": "conversion-driver",
+        "style": {
+            "fontColor": "#1F1F1F",
+            "fontSize": 38,
+            "fontWeight": "bold",
+            "alignment": "left",
+            "lighting": "lighting.highlight_elements"
+        }
+        },
+        {
+        "id": "limit-slider",
+        "type": "input-slider",
+        "role": "interactive-control",
+        "style": {
+            "trackTexture": "textures.slider_track",
+            "thumbColor": "#D90000",
+            "thumbShadow": "light drop shadow"
+        }
+        },
+        {
+        "id": "due-date-label",
+        "type": "body-text",
+        "text": "Vencimento da fatura:",
+        "role": "body",
+        "style": {
+            "fontColor": "#1F1F1F",
+            "fontSize": 16,
+            "fontWeight": "regular",
+            "alignment": "left"
+        }
+        },
+        {
+        "id": "due-date-options",
+        "type": "button-group",
+        "role": "interactive-control",
+        "options": [
+            { "text": "05", "selected": false, "texture": "textures.button_unselected" },
+            { "text": "10", "selected": false, "texture": "textures.button_unselected" },
+            { "text": "15", "selected": true, "texture": "textures.button_selected", "lighting": "lighting.highlight_elements" },
+            { "text": "25", "selected": false, "texture": "textures.button_unselected" }
+        ],
+        "style": {
+            "fontSize": 18,
+            "fontWeight": "bold",
+            "fontColor": "#1F1F1F"
+        }
+        },
+        {
+        "id": "brand-logo",
+        "type": "logo",
+        "text": "Utua",
+        "role": "logo",
+        "style": {
+            "fontColor": "#05A874",
+            "fontWeight": "bold",
+            "alignment": "center"
+        }
+        },
+        {
+        "id": "footer-disclaimer",
+        "type": "disclaimer-text",
+        "text": "*Oferecemos informações sobre serviços financeiros. A análise e os critérios do emissor determinam os limites, as taxas de juros e as aprovações. Verifique os termos aplicáveis.",
+        "role": "legal",
+        "style": {
+            "fontColor": "#5A5A5A",
+            "fontSize": 10,
+            "fontWeight": "regular",
+            "alignment": "center"
+        }
+        }
+    ],
+    "mass_variation_targets": ["main-headline", "subheadline", "limit-amount", "credit-card-image", "color_palette"],
+    "animation_suggestions": {
+        "cta-highlight": "Pulse efeito no valor do limite (R$4.000,00)",
+        "card-float": "Animação de leve flutuação do cartão ilustrado",
+        "slider-glow": "Brilho suave no controle de limite",
+        "button-press": "Efeito de pressionamento suave ao clicar nas datas"
+        }
+    }
+    Exemplo de resposta em JSON:
+
     {{
       "variacoes": [
         {{
