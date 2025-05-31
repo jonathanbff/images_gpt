@@ -1063,6 +1063,8 @@ EXTREMAMENTE IMPORTANTE:
 - O resultado deve ser idêntico à referência original, apenas com as cores e textos atualizados
 - NÃO modifique a estrutura, composição ou distribuição dos elementos em relação à imagem original
 - Textos devem ocupar o mesmo espaço e posição que na imagem original
+- Não altere a posição dos elementos visuais, apenas os textos. 
+- Seu objetivo é gerar formas criativas e inovadoras, mas sempre mantendo o layout original.
 """
             
             design_prompts.append(refined_prompt)
@@ -2068,6 +2070,10 @@ Reserve espaço na parte inferior para inserção posterior de logo.
 
 # Interface principal com fluxo de trabalho passo a passo
 def main():
+    # Botão para voltar à página inicial
+    if st.button("⬅️ Voltar à Página Inicial", key="back_to_home"):
+        st.switch_page("home.py")
+    
     st.markdown("### Sistema de criação automatizada de anúncios para marketing digital")
     st.markdown("Este aplicativo utiliza múltiplos agentes de IA para criar anúncios otimizados para conversão.")
     
